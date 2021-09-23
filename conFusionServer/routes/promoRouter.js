@@ -1,46 +1,83 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
+// require database model 
+const Promotions = require('../models/promotions');
 
 const promoRouter = express.Router();
 promoRouter.use(bodyParser.json());
 
 
 promoRouter.route('/')
-.all((req,res,next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next();
-  })
-.get((req,res,next) => {
-    console.log('get method from /promotion');
-    res.end('get method /promotions activated');
+.get((req,res,next)=>{
+    Promotions.find({})
+    .then( (Promotions) => {
+        res.statusCode =200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(Promotions);
+    }, (err) => next(err))
+    .catch((err) => next(err));
+
 })
 .post((req,res,next) => {
-    res.end('Will add the dish: ' + req.body.name + ' with title: ' + req.body.title);
+    Promotions.create( req.body)
+    .then( (promo) => {
+        res.statusCode = 200;
+        res.setHeader( 'Content-Type', 'application/json');
+        res.json(promo);
+    } , (err) => next(err))
+    .catch( (err) => next(err));
+    
 })
-.put((req,res,next) => {
-    res.statusCode = 403;
-    res.end('Not allowed to use PUT method in /promotions route'  );
+
+.put((req,res, next) =>{
+    res.statusCode= 403;
+    res.end('PUT is not supported on /Promotions');
 })
 .delete((req,res,next) => {
-    res.end('DELETE method data from /promotions route');
+    Promotions.remove({})
+    .then((resp) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(resp);
+    }, (err) => next(err))
+    .catch((err) => next(err)); 
 });
 
 promoRouter.route('/:promoId')
 .get((req,res,next) => {
-    console.log('get method from /promotion/:promoID');
-    res.end('get method of id  : ' + req.params.promoId + ' activated');
+    Promotions.findById(req.params.promoId)
+    .then((dish) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(dish);
+    }, (err) => next(err))
+    .catch((err) => next(err));
 })
-.post((req,res,next) => {
-    statusCode = 403;
-    res.end('Not allowed to use POST method in' + req.params.promoId + 'route'  );
+.post((req, res, next) => {
+    res.statusCode = 403;
+    res.end('POST operation not supported on /Promotions/'+ req.params.promoId);
 })
-.put((req,res,next) => {
-    res.write('PUT is activated in ' + req.params.promoId + '\n');
-    res.end('The name is : ' +req.body.name+ ' and the Title is : '+req.body.title );
+.put((req, res, next) => {
+    Promotions.findByIdAndUpdate(req.params.promoId, {
+        $set: req.body
+    }, { new: true })
+    .then((dish) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(dish);
+    }, (err) => next(err))
+    .catch((err) => next(err));
 })
-.delete((req,res,next) => {
-    res.end('DELETE method data from ' +req.params.promoId + 'route');
+.delete((req, res, next) => {
+    Promotions.findByIdAndRemove(req.params.promoId)
+    .then((resp) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(resp);
+    }, (err) => next(err))
+    .catch((err) => next(err));
 });
 
 

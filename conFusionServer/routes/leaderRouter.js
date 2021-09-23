@@ -1,46 +1,83 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+// Leaders model
+const Leaders = require('../models/leaders');
+
 const leaderRouter = express.Router();
 leaderRouter.use(bodyParser.json());
 
 
 leaderRouter.route('/')
-.all((req,res,next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next();
-})
-.get((req,res,next) => {
-    console.log('get method from /leaders');
-    res.end('get method /leaders activated');
+.get((req,res,next)=>{
+    Leaders.find({})
+    .then( (Leaders) => {
+        res.statusCode =200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(Leaders);
+    }, (err) => next(err))
+    .catch((err) => next(err));
+
 })
 .post((req,res,next) => {
-    res.end('Will add the dish: ' + req.body.name + ' with title: ' + req.body.title);
+    Leaders.create( req.body)
+    .then( (leader) => {
+        res.statusCode = 200;
+        res.setHeader( 'Content-Type', 'application/json');
+        res.json(leader);
+    } , (err) => next(err))
+    .catch( (err) => next(err));
+    
 })
-.put((req,res,next) => {
-    res.statusCode = 403;
-    res.end('Not allowed to use PUT method in /leaders route'  );
+
+.put((req,res, next) =>{
+    res.statusCode= 403;
+    res.end('PUT is not supported on /Leaders');
 })
 .delete((req,res,next) => {
-    res.end('DELETE method data from /leaders route');
+    Leaders.remove({})
+    .then((resp) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(resp);
+    }, (err) => next(err))
+    .catch((err) => next(err)); 
 });
 
+// leaderID route
 leaderRouter.route('/:leaderId')
 .get((req,res,next) => {
-    console.log('get method from /leaders/:leaderId');
-    res.end('get method of id  : ' + req.params.leaderId + ' activated');
+    Leaders.findById(req.params.leaderId)
+    .then((leader) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(leader);
+    }, (err) => next(err))
+    .catch((err) => next(err));
 })
-.post((req,res,next) => {
+.post((req, res, next) => {
     res.statusCode = 403;
-    res.end('Not allowed to use POST method in' + req.params.leaderId + 'route'  );
+    res.end('POST operation not supported on /Leaders/'+ req.params.leaderId);
 })
-.put((req,res,next) => {
-    res.write('PUT is activated in ' + req.params.leaderId + '\n');
-    res.end('The name is : ' +req.body.name+ ' and the Title is : '+req.body.title );
+.put((req, res, next) => {
+    Leaders.findByIdAndUpdate(req.params.leaderId, {
+        $set: req.body
+    }, { new: true })
+    .then((leader) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(leader);
+    }, (err) => next(err))
+    .catch((err) => next(err));
 })
-.delete((req,res,next) => {
-    res.end('DELETE method data from ' +req.params.leaderId + 'route');
+.delete((req, res, next) => {
+    Leaders.findByIdAndRemove(req.params.leaderId)
+    .then((resp) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(resp);
+    }, (err) => next(err))
+    .catch((err) => next(err));
 });
 
 
